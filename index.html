@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Mary Prompt">
+  <meta name="theme-color" content="#477377">
+  <title>Mary Prompt</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="styles.css">
+  <script src="config.js"></script>
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+
+  <!-- ============ Skriptliste ============ -->
+  <section id="screen-library" class="screen active" aria-label="Skriptliste">
+    <header class="topbar">
+      <h1>Mary Prompt</h1>
+      <button id="btn-open-settings" class="btn secondary small">Einstellungen</button>
+    </header>
+
+    <div class="card od-card">
+      <p id="od-status" class="od-status">OneDrive ist nicht verbunden.</p>
+      <div class="row">
+        <button id="btn-od-connect" class="btn">Mit OneDrive verbinden</button>
+        <button id="btn-od-refresh" class="btn secondary" hidden>Aktualisieren</button>
+      </div>
+    </div>
+
+    <button id="btn-open-paste" class="btn wide outline">+ Text einfügen</button>
+
+    <h2>Deine Skripte</h2>
+    <ul id="script-list" class="script-list"></ul>
+    <p id="empty-hint" class="hint">Noch keine Skripte da. Lege Textdateien (.txt) in deinen OneDrive-Ordner
+      oder füge einen Text über „Text einfügen“ ein.</p>
+  </section>
+
+  <!-- ============ Text einfügen ============ -->
+  <section id="screen-paste" class="screen" aria-label="Text einfügen">
+    <header class="topbar">
+      <button class="btn secondary small" data-back>Zurück</button>
+      <h1>Text einfügen</h1>
+    </header>
+    <label class="field">
+      <span>Titel (optional)</span>
+      <input id="paste-title" type="text" autocomplete="off" placeholder="z. B. Reel Rückruf">
+    </label>
+    <label class="field">
+      <span>Skript</span>
+      <textarea id="paste-text" rows="10" placeholder="Hier den Text einfügen …"></textarea>
+    </label>
+    <button id="btn-clipboard" class="btn secondary wide">Aus Zwischenablage einfügen</button>
+    <div class="row">
+      <button id="btn-paste-save" class="btn">Speichern</button>
+      <button id="btn-paste-use" class="btn outline">Direkt aufnehmen</button>
+    </div>
+  </section>
+
+  <!-- ============ Einstellungen ============ -->
+  <section id="screen-settings" class="screen" aria-label="Einstellungen">
+    <header class="topbar">
+      <button class="btn secondary small" data-back>Zurück</button>
+      <h1>Einstellungen</h1>
+    </header>
+
+    <div class="card">
+      <h2>Schriftgröße</h2>
+      <div class="stepper">
+        <button class="step-btn" data-step="fontStep" data-dir="-1" aria-label="Schrift kleiner">−</button>
+        <span id="val-fontStep" class="step-val"></span>
+        <button class="step-btn" data-step="fontStep" data-dir="1" aria-label="Schrift größer">+</button>
+      </div>
+      <div class="font-sample"><span id="font-sample" class="sub">Hallo, ich bin Mary.</span></div>
+    </div>
+
+    <div class="card">
+      <h2>Sichtbare Zeilen</h2>
+      <div class="stepper">
+        <button class="step-btn" data-step="lines" data-dir="-1" aria-label="Weniger Zeilen">−</button>
+        <span id="val-lines" class="step-val"></span>
+        <button class="step-btn" data-step="lines" data-dir="1" aria-label="Mehr Zeilen">+</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Tempo (automatischer Lauf)</h2>
+      <div class="stepper">
+        <button class="step-btn" data-step="speed" data-dir="-1" aria-label="Langsamer">−</button>
+        <span id="val-speed" class="step-val"></span>
+        <button class="step-btn" data-step="speed" data-dir="1" aria-label="Schneller">+</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Countdown vor dem Start</h2>
+      <div id="countdown-choices" class="choices"></div>
+    </div>
+
+    <div class="card">
+      <h2>Textlauf</h2>
+      <label class="radio"><input type="radio" name="mode" value="auto"> Automatisch mit eingestelltem Tempo</label>
+      <label class="radio"><input type="radio" name="mode" value="speech"> Sprachgesteuert (Test) – der Text folgt deiner Stimme</label>
+      <p class="hint small">Klappt die Sprachsteuerung nicht, läuft der Text automatisch weiter.</p>
+      <button id="btn-speech-test" class="btn secondary wide">Spracherkennung testen</button>
+      <p id="speech-test-out" class="speech-test" hidden></p>
+    </div>
+
+    <div class="card">
+      <h2>Kamera und Text</h2>
+      <label class="check"><input id="set-mirror" type="checkbox"> Kamerabild gespiegelt anzeigen (wie ein Spiegel)</label>
+      <button id="btn-reset-pos" class="btn secondary wide">Textposition zurücksetzen (ganz oben)</button>
+    </div>
+
+    <div class="card">
+      <h2>OneDrive</h2>
+      <label class="field">
+        <span>Ordner in OneDrive</span>
+        <input id="set-folder" type="text" autocomplete="off" autocapitalize="off">
+      </label>
+      <label class="field">
+        <span>Client-ID der Microsoft-App-Registrierung</span>
+        <input id="set-client-id" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+      </label>
+      <p class="hint small">Umleitungs-URI für die Registrierung (Plattform „Single-Page-Anwendung“):</p>
+      <p id="redirect-uri" class="mono"></p>
+      <button id="btn-od-logout" class="btn secondary wide">Von OneDrive abmelden</button>
+    </div>
+
+    <p class="hint small center" id="version-info">Mary Prompt</p>
+  </section>
+
+  <!-- ============ Aufnahme ============ -->
+  <section id="screen-record" class="screen dark" aria-label="Aufnahme">
+    <video id="cam" playsinline muted autoplay></video>
+
+    <div id="prompter" class="prompter">
+      <div class="prompter-viewport">
+        <div id="prompter-text" class="prompter-text"></div>
+      </div>
+      <div class="drag-grip" aria-hidden="true"></div>
+    </div>
+
+    <div id="paused-badge" class="badge" hidden>Pausiert – tippen zum Weiterlesen</div>
+    <div id="mode-badge" class="badge mode" hidden></div>
+
+    <div id="countdown" class="countdown" hidden>
+      <span id="countdown-num"></span>
+      <small>Zum Abbrechen den Aufnahme-Knopf tippen</small>
+    </div>
+
+    <div id="cam-error" class="cam-error" hidden>
+      <p id="cam-error-text"></p>
+      <button id="btn-cam-retry" class="btn">Erneut versuchen</button>
+    </div>
+
+    <div id="rec-time" class="rec-time" hidden>● 00:00</div>
+
+    <div class="rec-controls">
+      <button id="btn-rec-back" class="ctrl back">Zurück</button>
+      <div class="ctrl-group">
+        <div class="pair">
+          <button class="ctrl" data-quick="fontStep" data-dir="-1" aria-label="Schrift kleiner">A−</button>
+          <button class="ctrl" data-quick="fontStep" data-dir="1" aria-label="Schrift größer">A+</button>
+        </div>
+        <span class="ctrl-label">Schrift</span>
+      </div>
+      <button id="btn-record" class="rec-btn" aria-label="Aufnahme starten"></button>
+      <div class="ctrl-group">
+        <div class="pair">
+          <button class="ctrl" data-quick="speed" data-dir="-1" aria-label="Langsamer">−</button>
+          <button class="ctrl" data-quick="speed" data-dir="1" aria-label="Schneller">+</button>
+        </div>
+        <span class="ctrl-label" id="speed-label">Tempo</span>
+      </div>
+    </div>
+    <canvas id="rec-canvas" hidden></canvas>
+  </section>
+
+  <!-- ============ Vorschau ============ -->
+  <section id="screen-preview" class="screen dark" aria-label="Vorschau">
+    <video id="preview-video" playsinline controls></video>
+    <div class="preview-panel">
+      <div id="preview-unsaved">
+        <p class="preview-hint">Gefällt dir die Aufnahme? Beim Speichern öffnet sich das Teilen-Menü.
+          Dort „Video sichern“ wählen.</p>
+        <div class="row">
+          <button id="btn-discard" class="btn danger">Verwerfen</button>
+          <button id="btn-save" class="btn">Speichern</button>
+        </div>
+      </div>
+      <div id="preview-saved" hidden>
+        <p class="preview-hint">Erledigt. Wenn du „Video sichern“ gewählt hast, ist das Video jetzt in der Fotos-App.</p>
+        <div class="row">
+          <button id="btn-save-again" class="btn secondary">Noch mal teilen</button>
+          <button id="btn-new-take" class="btn">Neue Aufnahme</button>
+        </div>
+        <button id="btn-to-library" class="btn outline-light wide">Zur Skriptliste</button>
+      </div>
+    </div>
+  </section>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
