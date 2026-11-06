@@ -25,7 +25,7 @@
       <button id="btn-open-settings" class="btn secondary small">Einstellungen</button>
     </header>
 
-    <div class="card od-card">
+    <div id="od-card" class="card od-card" hidden>
       <p id="od-status" class="od-status">OneDrive ist nicht verbunden.</p>
       <div class="row">
         <button id="btn-od-connect" class="btn">Mit OneDrive verbinden</button>
@@ -33,12 +33,14 @@
       </div>
     </div>
 
+    <button id="btn-open-file" class="btn wide">Skript aus Dateien öffnen</button>
+    <input id="file-input" type="file" hidden>
     <button id="btn-open-paste" class="btn wide outline">+ Text einfügen</button>
 
     <h2>Deine Skripte</h2>
     <ul id="script-list" class="script-list"></ul>
-    <p id="empty-hint" class="hint">Noch keine Skripte da. Lege Textdateien (.txt) in deinen OneDrive-Ordner
-      oder füge einen Text über „Text einfügen“ ein.</p>
+    <p id="empty-hint" class="hint">Noch keine Skripte da. Tippe auf „Skript aus Dateien öffnen“ und wähle
+      in OneDrive oder iCloud Drive eine Textdatei (.txt) aus. Oder füge einen Text über „Text einfügen“ ein.</p>
   </section>
 
   <!-- ============ Text einfügen ============ -->

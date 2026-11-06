@@ -1,7 +1,7 @@
 import * as OD from './onedrive.js';
 import { SpeechFollower, speechSupported, normalizeWord, createRecognizer } from './speech.js';
 
-const APP_VERSION = '1.0.0';
+const APP_VERSION = '1.1.0';
 const cfg = window.MARY_CONFIG || {};
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => Array.from(document.querySelectorAll(s));
@@ -119,7 +119,8 @@ function renderLibrary() {
     title.textContent = it.title || 'Ohne Titel';
     const meta = document.createElement('span');
     meta.className = 'script-meta';
-    meta.textContent = `${it.source === 'cloud' ? 'OneDrive' : 'Eingefügt'} · ${fmtDate(it.modified)}`;
+    const label = it.source === 'cloud' ? 'OneDrive' : it.origin === 'file' ? 'Aus Dateien' : 'Eingefügt';
+    meta.textContent = `${label} · ${fmtDate(it.modified)}`;
     btn.append(title, meta);
     btn.addEventListener('click', () => openScript(it));
     li.append(btn);
@@ -177,6 +178,8 @@ async function openScript(it) {
 // ---------------------------------------------------------------------------
 function renderOD(msg) {
   const connected = OD.isConnected();
+  // Ohne Client-ID wird die OneDrive-Anbindung gar nicht erst angezeigt.
+  $('#od-card').hidden = !settings.clientId && !connected;
   $('#btn-od-connect').hidden = connected;
   $('#btn-od-refresh').hidden = !connected;
   $('#od-status').textContent = msg || (connected
@@ -228,6 +231,41 @@ $('#btn-od-connect').addEventListener('click', async () => {
   try { await OD.login(); } catch { renderOD('Die Anmeldung konnte nicht gestartet werden.'); }
 });
 $('#btn-od-refresh').addEventListener('click', syncOneDrive);
+
+// ---------------------------------------------------------------------------
+// Skript aus der Dateien-App (OneDrive, iCloud Drive, „Auf meinem iPhone“)
+// ---------------------------------------------------------------------------
+$('#btn-open-file').addEventListener('click', () => {
+  const input = $('#file-input');
+  input.value = '';
+  input.click();
+});
+$('#file-input').addEventListener('change', async (e) => {
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+  if (!/\.(txt|md|text)$/i.test(file.name) && !(file.type || '').startsWith('text/')) {
+    toast('Bitte eine Textdatei (.txt) auswählen. Word-Dateien kann die App nicht lesen.', 6000);
+    return;
+  }
+  let text;
+  try {
+    text = OD.decodeText(await file.arrayBuffer());
+  } catch {
+    toast('Die Datei konnte nicht gelesen werden.', 5000);
+    return;
+  }
+  if (!cleanScript(text)) {
+    toast('Diese Datei ist leer.');
+    return;
+  }
+  const title = file.name.replace(/\.(txt|md|text)$/i, '');
+  // Gleichnamiges Skript ersetzen statt doppelt anzulegen
+  localScripts = localScripts.filter((s) => !(s.origin === 'file' && s.title === title));
+  localScripts.push({ id: 'file-' + Date.now(), origin: 'file', title, text, modified: new Date().toISOString() });
+  store.set('localScripts', localScripts);
+  renderLibrary();
+  enterRecord(text);
+});
 
 // ---------------------------------------------------------------------------
 // Text einfügen

@@ -12,7 +12,15 @@ sonst erlaubt das iPhone weder Kamera noch Mikrofon. Am einfachsten und kostenlo
 4. Nach ein bis zwei Minuten ist die App erreichbar, z. B. unter
    `https://DEIN-NAME.github.io/mary-prompt/`
 
-## 2. OneDrive anbinden (einmalig, kostenlos)
+## Skripte ohne Microsoft-Registrierung (Standard)
+
+„Skript aus Dateien öffnen“ öffnet die Dateien-App des iPhones. Dort OneDrive (OneDrive-App muss installiert
+und in der Dateien-App eingeschaltet sein) oder iCloud Drive wählen, dann die `.txt`-Datei antippen.
+Das Skript wird in der App gespeichert. Wählst du eine Datei mit gleichem Namen erneut, wird die alte Fassung ersetzt.
+Die OneDrive-Anbindung unten ist nur nötig, wenn neue Skripte automatisch in der Liste erscheinen sollen.
+Sie braucht ein Geschäftskonto (Microsoft 365) oder ein kostenloses Azure-Konto.
+
+## 2. OneDrive anbinden (optional, kostenlos)
 
 1. https://entra.microsoft.com öffnen (mit dem Microsoft-Konto, zu dem dein OneDrive gehört)
    › „App-Registrierungen“ › „Neue Registrierung“.

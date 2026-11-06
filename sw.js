@@ -1,7 +1,7 @@
 // Service Worker: hält die App offline verfügbar.
 // Immer zuerst das Netz fragen (damit Updates sofort ankommen), offline aus dem Speicher laden.
 // Bei Änderungen an der App die Versionsnummer erhöhen.
-const CACHE = 'mary-prompt-v1.0.0';
+const CACHE = 'mary-prompt-v1.1.0';
 const ASSETS = [
   './',
   './index.html',
