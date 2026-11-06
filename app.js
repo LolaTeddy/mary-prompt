@@ -1,7 +1,9 @@
 import * as OD from './onedrive.js';
 import { SpeechFollower, speechSupported, normalizeWord, createRecognizer } from './speech.js';
+import { isDocx, extractDocxText } from './docx.js';
 
-const APP_VERSION = '1.1.0';
+const APP_VERSION = '1.2.0';
+const SCRIPT_FILE = /\.(txt|md|text|docx)$/i;
 const cfg = window.MARY_CONFIG || {};
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => Array.from(document.querySelectorAll(s));
@@ -235,6 +237,20 @@ $('#btn-od-refresh').addEventListener('click', syncOneDrive);
 // ---------------------------------------------------------------------------
 // Skript aus der Dateien-App (OneDrive, iCloud Drive, „Auf meinem iPhone“)
 // ---------------------------------------------------------------------------
+/** Liest eine Datei; zweiter Weg über FileReader, falls arrayBuffer() auf dem iPhone leer bleibt. */
+async function readFileBytes(file) {
+  try {
+    const b = await file.arrayBuffer();
+    if (b.byteLength) return b;
+  } catch { /* zweiter Weg */ }
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(r.result);
+    r.onerror = () => reject(r.error);
+    r.readAsArrayBuffer(file);
+  });
+}
+
 $('#btn-open-file').addEventListener('click', () => {
   const input = $('#file-input');
   input.value = '';
@@ -243,22 +259,41 @@ $('#btn-open-file').addEventListener('click', () => {
 $('#file-input').addEventListener('change', async (e) => {
   const file = e.target.files && e.target.files[0];
   if (!file) return;
-  if (!/\.(txt|md|text)$/i.test(file.name) && !(file.type || '').startsWith('text/')) {
-    toast('Bitte eine Textdatei (.txt) auswählen. Word-Dateien kann die App nicht lesen.', 6000);
+  if (/\.doc$/i.test(file.name)) {
+    toast('Alte Word-Dateien (.doc) gehen leider nicht. Bitte in Word als .docx speichern.', 7000);
     return;
   }
-  let text;
+  if (!SCRIPT_FILE.test(file.name) && !(file.type || '').startsWith('text/')) {
+    toast('Bitte eine Word-Datei (.docx) oder Textdatei (.txt) auswählen.', 6000);
+    return;
+  }
+  let buffer;
   try {
-    text = OD.decodeText(await file.arrayBuffer());
+    buffer = await readFileBytes(file);
   } catch {
     toast('Die Datei konnte nicht gelesen werden.', 5000);
     return;
   }
-  if (!cleanScript(text)) {
-    toast('Diese Datei ist leer.');
+  if (!buffer.byteLength) {
+    // Typisch für OneDrive/iCloud: Die Datei ist auf dem iPhone noch nicht heruntergeladen.
+    toast('Die Datei kam leer an. Sie ist wohl noch nicht aufs iPhone geladen. Bitte in der Dateien-App '
+      + 'einmal antippen und öffnen, dann hier erneut auswählen.', 9000);
     return;
   }
-  const title = file.name.replace(/\.(txt|md|text)$/i, '');
+  let text;
+  try {
+    text = isDocx(file.name) ? await extractDocxText(buffer) : OD.decodeText(buffer);
+  } catch (e) {
+    toast(e.code === 'unsupported'
+      ? 'Word-Dateien gehen erst ab iOS 16.4. Bitte das iPhone aktualisieren oder als .txt speichern.'
+      : 'Die Word-Datei konnte nicht gelesen werden. Bitte in Word als .docx neu speichern.', 8000);
+    return;
+  }
+  if (!cleanScript(text)) {
+    toast(`In der Datei steht kein lesbarer Text (${buffer.byteLength} Byte).`, 7000);
+    return;
+  }
+  const title = file.name.replace(SCRIPT_FILE, '');
   // Gleichnamiges Skript ersetzen statt doppelt anzulegen
   localScripts = localScripts.filter((s) => !(s.origin === 'file' && s.title === title));
   localScripts.push({ id: 'file-' + Date.now(), origin: 'file', title, text, modified: new Date().toISOString() });

@@ -15,7 +15,8 @@ sonst erlaubt das iPhone weder Kamera noch Mikrofon. Am einfachsten und kostenlo
 ## Skripte ohne Microsoft-Registrierung (Standard)
 
 „Skript aus Dateien öffnen“ öffnet die Dateien-App des iPhones. Dort OneDrive (OneDrive-App muss installiert
-und in der Dateien-App eingeschaltet sein) oder iCloud Drive wählen, dann die `.txt`-Datei antippen.
+und in der Dateien-App eingeschaltet sein) oder iCloud Drive wählen, dann die Word-Datei (`.docx`) oder Textdatei (`.txt`) antippen.
+Alte Word-Dateien (`.doc`) gehen nicht; Word-Dateien brauchen iOS 16.4 oder neuer.
 Das Skript wird in der App gespeichert. Wählst du eine Datei mit gleichem Namen erneut, wird die alte Fassung ersetzt.
 Die OneDrive-Anbindung unten ist nur nötig, wenn neue Skripte automatisch in der Liste erscheinen sollen.
 Sie braucht ein Geschäftskonto (Microsoft 365) oder ein kostenloses Azure-Konto.

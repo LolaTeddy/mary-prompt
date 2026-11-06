@@ -2,12 +2,14 @@
 // Anmeldung: OAuth 2.0 Authorization Code Flow mit PKCE (ohne Server, ohne Bibliothek).
 // Die App-Registrierung muss die Umleitungs-URI als Plattform "Single-Page-Anwendung" enthalten.
 
-const AUTH_BASE = 'https://login.microsoftonline.com/common/oauth2/v2.0';
+import { isDocx, extractDocxText } from './docx.js';
+
+const AUTH_BASE ='https://login.microsoftonline.com/common/oauth2/v2.0';
 const GRAPH = 'https://graph.microsoft.com/v1.0';
 const SCOPES = 'openid offline_access Files.Read';
 const KEY_TOKENS = 'mp.od.tokens';
 const KEY_PKCE = 'mp.od.pkce';
-const SCRIPT_EXT = /\.(txt|md|text)$/i;
+const SCRIPT_EXT = /\.(txt|md|text|docx)$/i;
 
 let clientId = '';
 
@@ -205,12 +207,15 @@ export function decodeText(buffer) {
 
 /** Lädt den Inhalt einer Skriptdatei. */
 export async function fetchContent(item) {
+  const toText = (buf) => (isDocx(item.name) ? extractDocxText(buf) : decodeText(buf));
   if (item.downloadUrl) {
+    let buf = null;
     try {
       const res = await fetch(item.downloadUrl);
-      if (res.ok) return decodeText(await res.arrayBuffer());
+      if (res.ok) buf = await res.arrayBuffer();
     } catch { /* Link abgelaufen oder offline – zweiter Weg unten */ }
+    if (buf) return toText(buf);
   }
   const res = await graph(`${GRAPH}/me/drive/items/${encodeURIComponent(item.id)}/content`, { raw: true });
-  return decodeText(await res.arrayBuffer());
+  return toText(await res.arrayBuffer());
 }
